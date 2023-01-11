@@ -1,0 +1,21 @@
+body{
+    position: relative;
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+    background-image: url("fondo.png");
+    background-color: rgb(9, 9, 9);
+    }
+    img{
+   position: absolute;
+   scale: 3;
+   transform:translate(51.5%,7%);
+position: fixed;
+    }
+    canvas{
+    position: absolute;
+    border-color: red;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,4%);
+    }

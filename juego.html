@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRON, The Game</title>
+    <link rel="stylesheet" type="text/css" href="diseño.css">
+    <link rel="shortcut icon" href="icon.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300&display=swap');
+    </style>
+</head>
+<body>
+    <img src="arcadeN.png">
+
+    <canvas id="miCanvas" width="500" height="500" style="border: 2px solid rgb(0, 0, 0);"></canvas>
+
+
+    <script type="text/javascript">
+
+        var canvas = document.querySelector('canvas')
+        var ctx = canvas.getContext('2d')
+
+        //ctx.fillRect(0, 0, canvas.width , canvas.height) TEST
+
+
+        //audios
+
+        const inicio = document.createElement('audio')
+        const fin = document.createElement('audio')
+        const motoA = document.createElement('audio')
+
+        //inicio.src = 'Insertar Moneda.mp3'
+        fin.src = 'Game Over.mp3'
+       // motoA.src = 'Moto de Tron.mp3'
+
+        
+        //JUGADORES -- MOTOS
+        var trailLength = 60;
+        var trails = [];
+        
+        var moto = ({x=200, y=460, color='black', est='blue', angle = 0, luz='cyan'}) => ({
+            x,
+            y,
+            w: 10,
+            h: 30,
+            color,
+            luz,
+            speed:11,
+            angle,
+            est,
+            
+
+            draw(){
+                
+                //RECTANGULO - MOTO
+                ctx.save();
+                ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+                ctx.rotate(this.angle);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
+                
+                //LINEA DE LUZ
+                ctx.beginPath();
+                ctx.moveTo(-this.w / 2 + 5, -this.h / 2);
+                ctx.lineTo(-this.w / 2 + 5, -this.h / 2 + 30);
+                ctx.strokeStyle = this.luz;
+                ctx.lineWidth = 2
+                ctx.stroke();
+                
+                ctx.restore();
+                
+                //ESTELA DE LUZ
+                trails.push({x: this.x , y: this.y, angle: this.angle});
+                
+                if(trails.length > trailLength) {
+                    trails.shift
+   }         
+
+                
+            for (var i = 0; i < trails.length; i++) {
+                ctx.save();
+                if(i>60){
+                        trails.shift();
+                        continue;
+                    }
+                ctx.translate(trails[i].x + this.w / 2, trails[i].y + this.h / 2);
+                ctx.rotate(trails[i].angle);
+                ctx.fillStyle = this.luz;
+                ctx.fillRect(-this.w / 2 + 4, -this.h / 2, 3, 30);
+                ctx.restore();
+                
+            }
+              
+
+                        },
+
+            //controles
+            moveUp(){
+                if(this.y<0){return}
+               this.y -= this.speed 
+               this.angle = 0;
+               motoA.play()
+            },
+            moveDown(){
+                if(this.y>canvas.height - this.h){return}
+                this.y += this.speed
+                this.angle = 0;
+            },
+            moveRight(){
+
+                if(this.x + this.w > canvas.width - this.w){return}
+
+                this.x += this.speed
+                
+                this.angle = -1.57 
+            
+                
+            },
+            moveLeft(){
+                if(this.x < 7){return}
+                this.x -= this.speed
+                
+                this.angle = 1.57
+            }
+        })
+        
+
+        //roles----
+        var usuario = moto({
+        luz : "red",
+   
+        }) //TRON
+        var prorama = moto({
+            x: canvas.width - 180,
+            color:'black',
+            luz : "red",
+            est: "red",
+            
+        }) //GLU
+
+        
+        
+        var intervalId;
+        var keyState = {};
+    
+        // Teclas presionadas
+        window.addEventListener('keydown', e => {
+            keyState[e.keyCode || e.which] = true;
+        }, true);
+        window.addEventListener('keyup', e => {
+            keyState[e.keyCode || e.which] = false;
+        }, true);
+
+
+  
+        //PANTALLA
+        function update() {
+            inicio.play();
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // TECLADO - MOVIMIENTOS USUARIO
+            if (keyState[38] && !keyState[37] && !keyState[39]) usuario.moveUp();
+            if (keyState[40] && !keyState[37] && !keyState[39]) usuario.moveDown();
+            if (keyState[37] && !keyState[38] && !keyState[40]) usuario.moveLeft();
+            if (keyState[39] && !keyState[38] && !keyState[40]) usuario.moveRight();
+
+
+            // TECLADO - MOVIMIENTOS PROGRAMA
+            if (keyState[87] && !keyState[65] && !keyState[68]) prorama.moveUp();
+            if (keyState[83] && !keyState[65] && !keyState[68]) prorama.moveDown();
+            if (keyState[65] && !keyState[87] && !keyState[83]) prorama.moveLeft();
+            if (keyState[68] && !keyState[87] && !keyState[83]) prorama.moveRight();
+
+            
+            collision();
+            
+            prorama.draw();
+            usuario.draw();
+           
+            
+         }
+
+   
+         //SISTEMA PARA RESETEAR
+        const over = () => {
+            ctx.fillStyle = 'black'
+            ctx.font = '50px Arial'
+            ctx.fillText("GAME OVER",100, canvas.width/2)
+        }
+
+
+        function collision(){
+            if(
+            usuario.x + usuario.w > prorama.x &&
+            usuario.x < prorama.x + prorama.w &&
+            usuario.y + usuario.h > prorama.y &&
+            usuario.y < prorama.y + prorama.h
+        ){
+            // prorama.draw = false
+            fin.play();
+            reset();
+            over();
+            
+            clearInterval(intervalId);
+                usuario.x =200;
+                usuario.y=460;
+                usuario.angle = 0;
+                prorama.x = canvas.width - 180;
+                prorama.y = 460;
+                prorama.angle = 0;
+            
+                
+            
+            }
+        }
+
+        function reset() {
+        usuario.x = 200;
+        usuario.y = 460;
+        usuario.angle = 0;
+        prorama.x = canvas.width - 180;
+        prorama.y = 460;
+        prorama.angle = 0;
+        trails = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+
+    
+        
+    
+        intervalId = setInterval(update, 1000/60); // FPS
+
+        //boton reset
+
+        addEventListener('keydown' , e => {
+            switch (e.keyCode){
+                case 32: 
+                reset();
+                break;
+            }
+        })
+
+
+        
+        
+
+    </script>
+</body>
+</html>
